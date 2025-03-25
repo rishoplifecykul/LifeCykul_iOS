@@ -14,13 +14,11 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 30) {
-                // Title
-                Text("Welcome to Lifecykul")
+                Text(StringConstants.welcomeText)
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.green)
                 
-                // Country Code & Phone Number Input
                 HStack {
                     Menu {
                         ForEach(CountryCodeModel.allCountries, id: \.id) { country in
@@ -43,23 +41,23 @@ struct LoginView: View {
                         .cornerRadius(10)
                     }
                     
-                    // Phone Number TextField
-                    TextField("Mobile Number", text: $loginViewModel.phoneNumber)
+                    TextField(StringConstants.mobileNumber, text: $loginViewModel.mobileNumber)
                         .keyboardType(.numberPad)
                         .focused($isKeyboardFocused)
                         .padding()
                         .frame(height: 50)
                         .background(Color.green.opacity(0.1))
                         .cornerRadius(10)
-                        .onChange(of: loginViewModel.phoneNumber) { newValue in
-                            loginViewModel.phoneNumber = String(newValue.prefix(10))
+                        .onChange(of: loginViewModel.mobileNumber) { newValue in
+                            loginViewModel.mobileNumber = String(newValue.prefix(10))
                             loginViewModel.validatePhoneNumber()
                         }
                 }
                 
-                // Proceed Button
-                NavigationLink(destination: NextScreenView()) {
-                    Text("Proceed")
+                Button(action: {
+                    loginViewModel.sendOTP()
+                }) {
+                    Text(StringConstants.proceed)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -71,9 +69,16 @@ struct LoginView: View {
                 .disabled(!loginViewModel.isPhoneNumberValid)
                 .opacity(loginViewModel.isPhoneNumberValid ? 1 : 0.5)
                 
+                if loginViewModel.isLoading {
+                    ProgressView()
+                }
+                
+                if let error = loginViewModel.errorMessage, !error.isEmpty {
+                    Text(error).foregroundColor(.red)
+                }
+                
                 Spacer()
                 
-                // Logo Image
                 Image("LifecykulLogo")
                     .resizable()
                     .scaledToFit()
@@ -85,18 +90,13 @@ struct LoginView: View {
             .onTapGesture {
                 isKeyboardFocused = false
             }
+            .navigationDestination(isPresented: $loginViewModel.navigateToOTP) {
+                OTPView()
+            }
+            .navigationDestination(isPresented: $loginViewModel.navigateToRegister) {
+                SignUpView()
+            }
         }
-    }
-}
-
-
-
-// Dummy Next Screen
-struct NextScreenView: View {
-    var body: some View {
-        Text("Next Screen")
-            .font(.title)
-            .navigationTitle("Next Screen")
     }
 }
 
